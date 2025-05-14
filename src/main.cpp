@@ -1,21 +1,23 @@
 #include "main.h"
 #include "pros/drivetrains4dummies.hpp"
 #include "pros/misc.hpp"
-#include "pros/motors.hpp"
 
 using namespace pros;
 using namespace std;
 
-DTSettings settings(12, 12, 12, 1, 12);
+MotorGroup aleft({1, 2, 3});
+MotorGroup aright({-4, -5, -6});
 
-Controller controller(E_CONTROLLER_MASTER);
-Imu inertial(20);
+Imu inertial(12);
 
-MotorGroup leftMotors({1, 2, 3});
-MotorGroup rightMotors({-4, -5, -6});
+Controller userinput(E_CONTROLLER_MASTER);
 
-Drivetrain4Dummies drivetrain(leftMotors, 13, rightMotors, 12, settings,
-                              inertial);
+DTSettings saettings(10, 4, 1, 9, 1, 2, 2, 2, 2);
+DTSettingsNT settings(10, 4, 1, 9, 1, 2, 2, 2, 2, 100, 100);
+
+Drivetrain4Dummies bot(aleft, -5, aright, 5, saettings, inertial);
+
+Drivetrain4DummiesNT botNT(aleft, -5, aright, 5, settings, inertial, userinput);
 
 void initialize() {}
 
@@ -25,4 +27,4 @@ void competition_initialize() {}
 
 void autonomous() {}
 
-void opcontrol() {}
+void opcontrol() { botNT.move_TurnFor(Left, 90, 12, 12, true); }
