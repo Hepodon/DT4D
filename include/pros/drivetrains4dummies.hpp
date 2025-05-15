@@ -16,28 +16,36 @@ enum BrakingType { COAST = 0, BRAKE = 1, HOLD = 2, DEFAULT = 3 };
 
 namespace pros {
 inline namespace v5 {
+class PIDsettings {
+public:
+  PIDsettings(int checkTime, double threshold, double minSpeed, double maxSpeed)
+      : _maxSpeed(maxSpeed), _minSpeed(minSpeed), _threshold(threshold),
+        _checkTime(checkTime) {}
 
+  int get_checkTime() const { return _checkTime; };
+  double get_threshold() const { return _threshold; };
+  double get_minSpeed() const { return _minSpeed; };
+  double get_maxSpeed() const { return _maxSpeed; };
+
+  int _checkTime;
+  double _threshold;
+  double _minSpeed;
+  double _maxSpeed;
+};
 class DTSettingsNT {
 
 public:
-  DTSettingsNT(int Wheelbase, int WheelDiameter, int GearRatio, double kP,
+  DTSettingsNT(int Wheelbase, int WheelDiameter, float GearRatio, double kP,
                double kI, double kD, double DkP, double DkI, double DkD,
                int driveVelocity = 50, int turnVelocity = 35)
       : _wheelbase(Wheelbase), _wheelDiameter(WheelDiameter),
         _gearRatio(GearRatio), _driveVelocity(driveVelocity),
-        _turnVelocity(turnVelocity) {
-    _kP = kP;
-    _kI = kI;
-    _kD = kD;
-
-    D_kP = DkP;
-    D_kI = DkI;
-    D_kD = DkD;
-  }
+        _turnVelocity(turnVelocity), _kP(kP), _kI(kI), _kD(kD), D_kP(DkP),
+        D_kI(DkI), D_kD(DkD) {}
 
   int get_Wheelbase() const { return _wheelbase; }
   int get_WheelDiameter() const { return _wheelDiameter; }
-  int get_GearRatio() const { return _gearRatio; }
+  float get_GearRatio() const { return _gearRatio; }
   int get_driveVelocity() const { return _driveVelocity; }
   int get_turnVelocity() const { return _turnVelocity; }
 
@@ -55,39 +63,32 @@ public:
   double get_DkI() const { return D_kI; }
   double get_DkD() const { return D_kD; }
 
-  int _kP;
-  int _kI;
-  int _kD;
+  double _kP;
+  double _kI;
+  double _kD;
 
-  int D_kP;
-  int D_kI;
-  int D_kD;
+  double D_kP;
+  double D_kI;
+  double D_kD;
 
   int _wheelbase;
   int _wheelDiameter;
-  int _gearRatio;
+  float _gearRatio;
   int _driveVelocity;
   int _turnVelocity;
 };
 class DTSettings {
 
 public:
-  DTSettings(int Wheelbase, int WheelDiameter, int GearRatio, double kP,
+  DTSettings(int Wheelbase, int WheelDiameter, float GearRatio, double kP,
              double kI, double kD, double DkP, double DkI, double DkD)
       : _wheelbase(Wheelbase), _wheelDiameter(WheelDiameter),
-        _gearRatio(GearRatio) {
-    _kP = kP;
-    _kI = kI;
-    _kD = kD;
-
-    D_kP = DkP;
-    D_kI = DkI;
-    D_kD = DkD;
-  }
+        _gearRatio(GearRatio), _kP(kP), _kI(kI), _kD(kD), D_kP(DkP), D_kI(DkI),
+        D_kD(DkD) {}
 
   int get_Wheelbase() const { return _wheelbase; }
   int get_WheelDiameter() const { return _wheelDiameter; }
-  int get_GearRatio() const { return _gearRatio; }
+  float get_GearRatio() const { return _gearRatio; }
 
   void set_Wheelbase(int Wheelbase) { _wheelbase = Wheelbase; }
   void set_WheelDiameter(int WheelDiameter) { _wheelDiameter = WheelDiameter; }
@@ -101,13 +102,13 @@ public:
   double get_DkI() const { return D_kI; }
   double get_DkD() const { return D_kD; }
 
-  int _kP;
-  int _kI;
-  int _kD;
+  double _kP;
+  double _kI;
+  double _kD;
 
-  int D_kP;
-  int D_kI;
-  int D_kD;
+  double D_kP;
+  double D_kI;
+  double D_kD;
 
   int _wheelbase;
   int _wheelDiameter;
@@ -116,13 +117,18 @@ public:
 class Drivetrain4Dummies {
 
 public:
-  Drivetrain4Dummies(MotorGroup &_leftMotors, int leftDistance,
-                     MotorGroup &_rightMotors, int rightDistance,
-                     DTSettings &_settings, Imu &_inertial);
+  Drivetrain4Dummies(PIDsettings &PIDset, MotorGroup &leftMotors,
+                     int leftDistance, MotorGroup &rightMotors,
+                     int rightDistance, DTSettings &settings, Imu &inertial,
+                     Controller *con = nullptr)
+      : _leftMotors(leftMotors), _rightMotors(rightMotors), _inertial(inertial),
+        _settings(settings), _con(con), _PIDset(PIDset) {}
   MotorGroup &_leftMotors;
   MotorGroup &_rightMotors;
   Imu &_inertial;
   DTSettings &_settings;
+  Controller *_con;
+  PIDsettings &_PIDset;
 
   int _leftDistance;
   int _rightDistance;
@@ -141,6 +147,8 @@ public:
     _x = x;
     _y = y;
     _theta = theta;
+    if (_con != nullptr)
+      _con->rumble(".-.");
   }
   void reset() {
     _x = 0;
@@ -179,17 +187,18 @@ class Drivetrain4DummiesNT {
 public:
   /* ========================= CLASS ========================= */
 
-  Drivetrain4DummiesNT(MotorGroup &_leftMotors, int leftDistance,
-                       MotorGroup &_rightMotors, int rightDistance,
-                       DTSettingsNT &_settings, Imu &_inertial,
-                       Controller &_controller);
+  Drivetrain4DummiesNT(PIDsettings &PIDset, MotorGroup &leftMotors,
+                       int leftDistance, MotorGroup &rightMotors,
+                       int rightDistance, DTSettingsNT &settings, Imu &inertial,
+                       Controller &controller)
+      : _leftMotors(leftMotors), _rightMotors(rightMotors), _inertial(inertial),
+        _settings(settings), _controller(controller), _PIDset(PIDset) {}
   MotorGroup &_leftMotors;
   MotorGroup &_rightMotors;
   Imu &_inertial;
   DTSettingsNT &_settings;
   Controller &_controller;
-
-  // CLAIBRATION
+  PIDsettings &_PIDset;
 
   void CALIBRATE(BrakingType BrakeType = COAST) {
     _inertial.reset();
@@ -243,31 +252,34 @@ public:
     delay(timeout);
   }
 
-  void move_DriveFor(DirectionStraight direction, uint distance,
+  void move_DriveFor(bool PID, DirectionStraight direction, uint distance,
                      uint velocity = 1000, uint timeout = 0,
                      bool async = true) {
-    if (velocity == 1000)
-      velocity = _settings.get_driveVelocity();
-    int start = _leftMotors.get_position();
+    if (!PID) {
+      if (velocity == 1000)
+        velocity = _settings.get_driveVelocity();
+      int start = _leftMotors.get_position();
 
-    int Motordegrees =
-        360 * ((distance / (M_PI * _settings.get_WheelDiameter())) *
-               _settings.get_GearRatio());
+      int Motordegrees =
+          360 * ((distance / (M_PI * _settings.get_WheelDiameter())) *
+                 _settings.get_GearRatio());
 
-    switch (direction) {
-    case 1:
-      _leftMotors.move_relative(Motordegrees, velocity);
-      _leftMotors.move_relative(Motordegrees, velocity);
-      break;
+      switch (direction) {
+      case 1:
+        _leftMotors.move_relative(Motordegrees, velocity);
+        _leftMotors.move_relative(Motordegrees, velocity);
+        break;
 
-    case -1:
-      _leftMotors.move_relative(-Motordegrees, -velocity);
-      _leftMotors.move_relative(-Motordegrees, -velocity);
-      break;
-    }
-    if (async) {
-      while (_leftMotors.get_position() - start < Motordegrees)
-        delay(20);
+      case -1:
+        _leftMotors.move_relative(-Motordegrees, -velocity);
+        _leftMotors.move_relative(-Motordegrees, -velocity);
+        break;
+      }
+      if (async) {
+        while (_leftMotors.get_position() - start < Motordegrees)
+          delay(20);
+      }
+    } else {
     }
     delay(timeout);
   }
@@ -293,27 +305,73 @@ public:
     delay(timeout);
   }
 
-  void move_TurnFor(DirectionTurn direction, uint theta, uint velocity = 1000,
-                    uint timeout = 0, bool async = true) {
-    if (velocity == 1000)
-      velocity = _settings.get_turnVelocity();
-    int Motordegrees =
-        (_settings.get_Wheelbase() * theta) / _settings.get_WheelDiameter();
-    int start = _leftMotors.get_position();
-    switch (direction) {
-    case 1:
-      _leftMotors.move_relative(-Motordegrees, -velocity);
-      _rightMotors.move_relative(Motordegrees, velocity);
-      break;
+  void move_TurnFor(bool PID, DirectionTurn direction, uint theta,
+                    uint velocity = 1000, uint timeout = 0, bool async = true) {
+    if (!PID) {
+      if (velocity == 1000)
+        velocity = _settings.get_turnVelocity();
+      int Motordegrees =
+          (_settings.get_Wheelbase() * theta) / _settings.get_WheelDiameter();
+      int start = _leftMotors.get_position();
+      switch (direction) {
+      case 1:
+        _leftMotors.move_relative(-Motordegrees, -velocity);
+        _rightMotors.move_relative(Motordegrees, velocity);
+        break;
 
-    case -1:
-      _leftMotors.move_relative(Motordegrees, velocity);
-      _rightMotors.move_relative(-Motordegrees, -velocity);
-      break;
-    }
-    if (async) {
-      while (_leftMotors.get_position() - start < Motordegrees)
-        delay(20);
+      case -1:
+        _leftMotors.move_relative(Motordegrees, velocity);
+        _rightMotors.move_relative(-Motordegrees, -velocity);
+        break;
+      }
+      if (async) {
+        while (_leftMotors.get_position() - start < Motordegrees)
+          delay(20);
+      }
+    } else {
+      double error = 0;
+      double lastError = 0;
+      double integral = 0;
+      double derivative = 0;
+      double output = 0;
+
+      const double maxOutput = _PIDset.get_maxSpeed();
+      const double integralLimit = maxOutput;
+      const double minSpeed = _PIDset.get_minSpeed();
+      const double threshold = _PIDset.get_threshold();
+      const int settleTime = _PIDset.get_checkTime();
+
+      int withinThresholdTime = 0;
+
+      while (withinThresholdTime < settleTime) {
+        double currentAngle = _inertial.get_heading();
+        error = theta - currentAngle;
+
+        integral += error;
+        if (std::abs(error) > integralLimit)
+          integral = 0;
+
+        derivative = error - lastError;
+        lastError = error;
+
+        output = _settings.get_kP() * error + _settings.get_kI() * integral +
+                 _settings.get_kD() * derivative;
+
+        output = std::clamp(output, -maxOutput, maxOutput);
+
+        if (std::abs(output) < minSpeed && std::abs(error) > threshold)
+          output = minSpeed * (output > 0 ? 1 : -1);
+
+        _leftMotors.move(-output);
+        _rightMotors.move(output);
+
+        if (std::abs(error) < threshold)
+          withinThresholdTime += 10;
+        else
+          withinThresholdTime = 0;
+
+        pros::delay(10);
+      }
     }
     delay(timeout);
   }
