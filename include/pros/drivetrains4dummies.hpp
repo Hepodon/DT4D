@@ -280,6 +280,42 @@ public:
           delay(20);
       }
     } else {
+      _leftMotors.tare_position();
+      _leftMotors.tare_position();
+
+      double error;
+      double lastError = 0;
+      double derivative;
+      double integral = 0;
+
+      const double wheelCircumference = _settings.get_WheelDiameter() * M_PI;
+      const double degPerInch =
+          360.0 * _settings.get_GearRatio() / wheelCircumference;
+      const double targetPosition = distance * degPerInch;
+
+      while (true) {
+        int currentPosition =
+            (_leftMotors.get_position() + -_rightMotors.get_position()) / 2.0;
+        error = targetPosition - currentPosition;
+
+        if (fabs(error) < _PIDset.get_threshold())
+          break;
+
+        integral += error;
+        derivative = error - lastError;
+        lastError = error;
+
+        double output = _settings.get_DkP() * error +
+                        _settings.get_DkI() * integral +
+                        _settings.get_DkD() * derivative;
+
+        output = std::max(std::min(output, _PIDset.get_maxSpeed()),
+                          _PIDset.get_minSpeed());
+
+        _leftMotors.move_velocity(output);
+        _rightMotors.move_velocity(output);
+        delay(20);
+      }
     }
     delay(timeout);
   }
