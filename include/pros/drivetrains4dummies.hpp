@@ -12,6 +12,7 @@
 enum DirectionStraight { Forward = 1, Fwd = 1, Reverse = -1, Rev = -1 };
 enum DirectionTurn { Left = 1, L = 1, Right = -1, R = -1 };
 enum BrakingType { COAST = 0, BRAKE = 1, HOLD = 2, DEFAULT = 3 };
+enum MoveType { PID, Relative, Basic };
 /* ========================================================== */
 
 namespace pros {
@@ -260,10 +261,11 @@ public:
     delay(timeout);
   }
 
-  void move_DriveFor(bool PID, DirectionStraight direction, uint distance,
+  void move_DriveFor(MoveType MT, DirectionStraight direction, uint distance,
                      int slewRate = 15, uint velocity = 1000, uint timeout = 0,
                      bool async = true) {
-    if (!PID) {
+    switch (MT) {
+    case Relative: {
       if (velocity == 1000)
         velocity = _settings.get_driveVelocity();
       int start = _leftMotors.get_position();
@@ -287,7 +289,10 @@ public:
         while (_leftMotors.get_position() - start < Motordegrees)
           delay(20);
       }
-    } else {
+      delay(timeout);
+      break;
+    }
+    case PID: {
       _leftMotors.tare_position();
       _leftMotors.tare_position();
 
@@ -331,7 +336,9 @@ public:
         delay(20);
       }
     }
-    delay(timeout);
+    case Basic: {
+    }
+    }
   }
   /* ================================================================== */
 
@@ -355,10 +362,11 @@ public:
     delay(timeout);
   }
 
-  void move_TurnFor(bool PID, DirectionTurn direction, uint theta,
+  void move_TurnFor(MoveType MT, DirectionTurn direction, uint theta,
                     int slewRate = 5, uint velocity = 1000, uint timeout = 0,
                     bool async = true) {
-    if (!PID) {
+    switch (MT) {
+    case 1: {
       if (velocity == 1000)
         velocity = _settings.get_turnVelocity();
       int Motordegrees =
@@ -379,9 +387,9 @@ public:
         while (_leftMotors.get_position() - start < Motordegrees)
           delay(20);
       }
+      break;
     }
-
-    else {
+    case 0: {
       double error = 0;
       double lastError = 0;
       double integral = 0;
@@ -433,8 +441,13 @@ public:
 
         pros::delay(10);
       }
+      break;
+    }
+    case Basic: {
+    }
     }
   }
+
   /* ================================================================= */
 
   /* ========================= MOVEMENT STOP ========================= */

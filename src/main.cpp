@@ -6,6 +6,7 @@
 
 using namespace pros;
 using namespace std;
+using namespace DT4D;
 
 DT4D::PIDsettings pids(100, 5, 15, 100);
 
@@ -35,14 +36,18 @@ void disabled() {}
 
 void competition_initialize() {}
 
-void autonomous() { botNT.move_TurnFor(true, Left, 90, 4); }
-
-int power;
-int turn;
-int leftPower = 0;
-int rightPower = 0;
+void autonomous() {
+  botNT.CALIBRATE();
+  botNT.move_TurnFor(PID, Left, 90, 4);
+  botNT.move_DriveFor(PID, Fwd, 12);
+  botNT.stop();
+}
 
 void opcontrol() {
+  int power;
+  int turn;
+  int leftPower = 0;
+  int rightPower = 0;
   while (true) {
     power = userinput.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
     turn = userinput.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
