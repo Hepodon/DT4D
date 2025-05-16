@@ -1,6 +1,7 @@
 #include "main.h"
 #include "pros/abstract_motor.hpp"
 #include "pros/drivetrains4dummies.hpp"
+#include "pros/misc.h"
 #include "pros/misc.hpp"
 
 using namespace pros;
@@ -8,9 +9,9 @@ using namespace std;
 
 PIDsettings pids(100, 5, 15, 100);
 
-MotorGroup aleft({1, 2, 3}, v5::MotorGears::green,
+MotorGroup aleft({5, 10}, v5::MotorGears::green,
                  v5::MotorEncoderUnits::degrees);
-MotorGroup aright({-4, -5, -6}, v5::MotorGears::green,
+MotorGroup aright({-1, -6}, v5::MotorGears::green,
                   v5::MotorEncoderUnits::degrees);
 
 Imu inertial(12);
@@ -31,6 +32,15 @@ void disabled() {}
 
 void competition_initialize() {}
 
-void autonomous() {}
+void autonomous() { botNT.move_DriveFor(true, Fwd, 12); }
 
-void opcontrol() { botNT.move_TurnFor(false, Left, 90, 12, 12, true); }
+void opcontrol() {
+  while (true) {
+    int fwdPower = userinput.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
+    int turnPower = userinput.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
+
+    aleft.move(fwdPower - turnPower);
+    aright.move(fwdPower + turnPower);
+    delay(20);
+  }
+}
