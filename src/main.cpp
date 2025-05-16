@@ -38,7 +38,7 @@ void competition_initialize() {}
 
 void autonomous() {
   botNT.CALIBRATE();
-  botNT.move_TurnFor(PID, Left, 90, 4);
+  botNT.move_TurnFor(PID, Left, 90);
   botNT.move_DriveFor(PID, Fwd, 12);
   botNT.stop();
 }
@@ -50,13 +50,18 @@ void opcontrol() {
   int rightPower = 0;
   while (true) {
     power = userinput.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-    turn = userinput.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_X);
+    turn = userinput.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
     power = power = 0 ? -1 : power;
     turn = turn = 0 ? -1 : turn;
-
-    leftPower = DT4D::applySlew(leftPower, power + turn, 10);
-    rightPower = DT4D::applySlew(rightPower, power - turn, 10);
-
+    if (power != -1) {
+      leftPower =
+          DT4D::applySlew(leftPower, power + turn, 10 + (10.0 * power / 100));
+      rightPower =
+          DT4D::applySlew(rightPower, power - turn, 10 + (10.0 * power / 100));
+    } else {
+      leftPower = DT4D::applySlew(leftPower, power + turn, 25);
+      rightPower = DT4D::applySlew(rightPower, power - turn, 25);
+    }
     aleft.move(leftPower);
     aright.move(rightPower);
 

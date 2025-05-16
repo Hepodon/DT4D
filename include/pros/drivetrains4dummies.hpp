@@ -18,7 +18,7 @@ enum MoveType { PID, Relative, Basic };
 namespace pros {
 inline namespace v5 {
 namespace DT4D {
-inline int applySlew(int current, int target, int rate = 5) {
+inline float applySlew(int current, int target, float rate = 5) {
   int diff = target - current;
   if (abs(diff) > rate)
     return current + rate * (diff > 0 ? 1 : -1);
@@ -139,56 +139,187 @@ public:
   Controller *_con;
   PIDsettings &_PIDset;
 
-  int _leftDistance;
-  int _rightDistance;
-
+  int _theta;
   int _x;
   int _y;
-  int _theta;
 
   void CALIBRATE(int x = 0, int y = 0, int theta = 0) {
-    _inertial.reset();
-    while (_inertial.is_calibrating()) {
-      pros::delay(20);
-    }
-    _leftMotors.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    _rightMotors.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-    _x = x;
-    _y = y;
-    _theta = theta;
-    if (_con != nullptr)
-      _con->rumble(".-.");
-  }
-  void reset() {
-    _x = 0;
-    _y = 0;
-    _theta = 0;
-    _inertial.tare();
-  }
-
-  int getX() const { return _x; }
-  int getY() const { return _y; }
-  int getTheta() const { return _theta; }
-
-  void setPOS(int x, int y, int theta) {
+    _inertial.reset(true);
     _x = x;
     _y = y;
     _theta = theta;
   }
 
-  int get_Wheelbase() const { return _settings.get_Wheelbase(); }
-  int get_WheelDiameter() const { return _settings.get_WheelDiameter(); }
-  int get_GearRatio() const { return _settings.get_GearRatio(); }
+  int get_wheelbase() const { return _settings.get_Wheelbase(); }
+  int get_wheelDiameter() const { return _settings.get_WheelDiameter(); }
+  int get_gearRatio() const { return _settings.get_GearRatio(); }
 
   void set_Wheelbase(int Wheelbase) { _settings.set_Wheelbase(Wheelbase); }
   void set_WheelDiameter(int WheelDiameter) {
     _settings.set_WheelDiameter(WheelDiameter);
   }
   void set_GearRatio(int GearRatio) { _settings.set_GearRatio(GearRatio); }
+  void set_Pos(int x, int y) {
+    _x = x;
+    _y = y;
+  }
+  void set_angle(int theta) { _theta = theta; }
 
-  void stop() {
-    _leftMotors.brake();
-    _leftMotors.brake();
+  void moveX(int distance) {
+    if (distance > 0) {
+      if (_theta < 90) {
+        turn_ToAngle(90, R);
+      } else {
+        turn_ToAngle(90, L);
+      }
+    } else {
+      if (_theta < -90) {
+        turn_ToAngle(90, R);
+      } else {
+        turn_ToAngle(90, L);
+      }
+    }
+  }
+
+  void moveY(int distance) {
+    if (distance > 0) {
+      if (_theta < 0) {
+        turn_ToAngle(0, R);
+      } else {
+        turn_ToAngle(0, L);
+      }
+    } else {
+      if (_theta > 0) {
+        if (_theta < 180) {
+          turn_ToAngle(90, R);
+        } else {
+          turn_ToAngle(90, L);
+        }
+      } else {
+        if (_theta < -180) {
+          turn_ToAngle(90, R);
+        } else {
+          turn_ToAngle(90, L);
+        }
+      }
+    }
+  }
+
+  void move_ToPos(int x, int y, bool Xfirst = true) {
+    int deltaX = x - _x;
+    if (Xfirst) {
+      moveX(deltaX);
+    }
+  }
+
+private:
+  void move_DriveFor(DirectionStraight direction, uint distance,
+                     int slewRate = 15, uint velocity = 1000, uint timeout = 0,
+                     bool async = true) {
+    _leftMotors.tare_position();
+    _leftMotors.tare_position();
+
+    double error;
+    double lastError = 0;
+    double derivative;
+    double integral = 0;
+    float lastOutput = 0;
+
+    const double wheelCircumference = _settings.get_WheelDiameter() * M_PI;
+    const double degPerInch =
+        360.0 * _settings.get_GearRatio() / wheelCircumference;
+    const double targetPosition = distance * degPerInch;
+
+    while (true) {
+      int currentPosition =
+          (_leftMotors.get_position() + -_rightMotors.get_position()) / 2.0;
+      error = targetPosition - currentPosition;
+
+      if (fabs(error) < _PIDset.get_threshold())
+        break;
+
+      integral += error;
+      derivative = error - lastError;
+      lastError = error;
+
+      double output = _settings.get_DkP() * error +
+                      _settings.get_DkI() * integral +
+                      _settings.get_DkD() * derivative;
+
+      output = std::max(std::min(output, _PIDset.get_maxSpeed()),
+                        _PIDset.get_minSpeed());
+      double delta = output - lastOutput;
+      if (std::abs(delta) > slewRate)
+        output = lastOutput + slewRate * (delta > 0 ? 1 : -1);
+
+      lastOutput = output;
+
+      _leftMotors.move_velocity(output);
+      _rightMotors.move_velocity(output);
+      delay(20);
+    }
+  }
+
+  void move_TurnFor(DirectionTurn direction, uint theta, int slewRate = 5,
+                    uint timeout = 0, bool async = true) {
+    _theta = theta;
+
+    double error = 0;
+    double lastError = 0;
+    double integral = 0;
+    double derivative = 0;
+
+    const double maxOutput = _PIDset.get_maxSpeed();
+    const double integralLimit = maxOutput;
+    const double minSpeed = _PIDset.get_minSpeed();
+    const double threshold = _PIDset.get_threshold();
+    const int settleTime = _PIDset.get_checkTime();
+    double rawOutput = 0;
+
+    float lastOutput = 0;
+
+    int withinThresholdTime = 0;
+
+    while (withinThresholdTime < settleTime) {
+      double currentAngle = _inertial.get_heading();
+      error = theta - currentAngle;
+
+      integral += error;
+      if (std::abs(error) > integralLimit)
+        integral = 0;
+
+      derivative = error - lastError;
+      lastError = error;
+
+      rawOutput = _settings.get_kP() * error + _settings.get_kI() * integral +
+                  _settings.get_kD() * derivative;
+
+      rawOutput = std::clamp(rawOutput, -maxOutput, maxOutput);
+
+      if (std::abs(rawOutput) < minSpeed && std::abs(error) > threshold)
+        rawOutput = minSpeed * (rawOutput > 0 ? 1 : -1);
+
+      double delta = rawOutput - lastOutput;
+      if (std::abs(delta) > slewRate)
+        rawOutput = lastOutput + slewRate * (delta > 0 ? 1 : -1);
+
+      lastOutput = rawOutput;
+
+      _leftMotors.move(-rawOutput);
+      _rightMotors.move(rawOutput);
+
+      if (std::abs(error) < threshold)
+        withinThresholdTime += 10;
+      else
+        withinThresholdTime = 0;
+
+      pros::delay(10);
+    }
+  }
+
+  void turn_ToAngle(int angle, DirectionTurn Direction) {
+    int deltaT = angle - _theta;
+    move_TurnFor(Direction, deltaT);
   }
 };
 class Drivetrain4DummiesNT {
@@ -209,12 +340,7 @@ public:
   Controller &_controller;
   PIDsettings &_PIDset;
 
-  void CALIBRATE(BrakingType BrakeType = COAST) {
-    _inertial.reset();
-    while (_inertial.is_calibrating()) {
-      pros::delay(20);
-    }
-  }
+  void CALIBRATE() { _inertial.reset(true); }
   /* =========================================================== */
 
   /* =========================== GET =========================== */
