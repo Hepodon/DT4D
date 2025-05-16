@@ -180,6 +180,7 @@ public:
       }
     }
     move_DriveFor(Fwd, distance);
+    _x += distance;
   }
 
   void moveY(int distance) {
@@ -205,6 +206,7 @@ public:
       }
       move_DriveFor(Fwd, distance);
     }
+    _y = distance;
   }
 
   void move_ToPos(int x, int y, bool Xfirst = true) {
@@ -216,8 +218,9 @@ public:
     } else {
       moveY(deltaY);
       moveX(deltaX);
-      
     }
+    _x = x;
+    _y = y;
   }
 
 private:
