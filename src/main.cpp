@@ -35,7 +35,7 @@ void disabled() {}
 
 void competition_initialize() {}
 
-void autonomous() { botNT.move_DriveFor(true, Fwd, 12); }
+void autonomous() { botNT.move_TurnFor(true, Left, 90, 4); }
 
 int power;
 int turn;

@@ -392,6 +392,7 @@ public:
       const double minSpeed = _PIDset.get_minSpeed();
       const double threshold = _PIDset.get_threshold();
       const int settleTime = _PIDset.get_checkTime();
+      double rawOutput = 0;
 
       float lastOutput = 0;
 
@@ -408,9 +409,8 @@ public:
         derivative = error - lastError;
         lastError = error;
 
-        double rawOutput = _settings.get_kP() * error +
-                           _settings.get_kI() * integral +
-                           _settings.get_kD() * derivative;
+        rawOutput = _settings.get_kP() * error + _settings.get_kI() * integral +
+                    _settings.get_kD() * derivative;
 
         rawOutput = std::clamp(rawOutput, -maxOutput, maxOutput);
 
