@@ -16,6 +16,13 @@ enum BrakingType { COAST = 0, BRAKE = 1, HOLD = 2, DEFAULT = 3 };
 
 namespace pros {
 inline namespace v5 {
+inline int applySlew(int current, int target, int rate = 5) {
+  int diff = target - current;
+  if (abs(diff) > rate)
+    return current + rate * (diff > 0 ? 1 : -1);
+  return target;
+}
+
 class PIDsettings {
 public:
   PIDsettings(int checkTime, double threshold, double minSpeed, double maxSpeed)
@@ -364,7 +371,9 @@ public:
         while (_leftMotors.get_position() - start < Motordegrees)
           delay(20);
       }
-    } else {
+    }
+
+    else {
       double error = 0;
       double lastError = 0;
       double integral = 0;
@@ -376,6 +385,10 @@ public:
       const double minSpeed = _PIDset.get_minSpeed();
       const double threshold = _PIDset.get_threshold();
       const int settleTime = _PIDset.get_checkTime();
+
+      // 🔧 Slew setup
+      const double slewRate = 5; // max change per loop (adjust as needed)
+      double lastOutput = 0;
 
       int withinThresholdTime = 0;
 
@@ -390,16 +403,24 @@ public:
         derivative = error - lastError;
         lastError = error;
 
-        output = _settings.get_kP() * error + _settings.get_kI() * integral +
-                 _settings.get_kD() * derivative;
+        double rawOutput = _settings.get_kP() * error +
+                           _settings.get_kI() * integral +
+                           _settings.get_kD() * derivative;
 
-        output = std::clamp(output, -maxOutput, maxOutput);
+        rawOutput = std::clamp(rawOutput, -maxOutput, maxOutput);
 
-        if (std::abs(output) < minSpeed && std::abs(error) > threshold)
-          output = minSpeed * (output > 0 ? 1 : -1);
+        if (std::abs(rawOutput) < minSpeed && std::abs(error) > threshold)
+          rawOutput = minSpeed * (rawOutput > 0 ? 1 : -1);
 
-        _leftMotors.move(-output);
-        _rightMotors.move(output);
+        // 💡 Slew control logic
+        double delta = rawOutput - lastOutput;
+        if (std::abs(delta) > slewRate)
+          rawOutput = lastOutput + slewRate * (delta > 0 ? 1 : -1);
+
+        lastOutput = rawOutput;
+
+        _leftMotors.move(-rawOutput);
+        _rightMotors.move(rawOutput);
 
         if (std::abs(error) < threshold)
           withinThresholdTime += 10;
@@ -409,7 +430,6 @@ public:
         pros::delay(10);
       }
     }
-    delay(timeout);
   }
   /* ================================================================= */
 
