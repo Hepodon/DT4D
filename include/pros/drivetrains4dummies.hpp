@@ -223,6 +223,20 @@ public:
     _y = y;
   }
 
+  void move_ToPosDiag(int x, int y) {
+    int deltaX = x - _x;
+    int deltaY = y - _x;
+
+    float distance = sqrt(pow(deltaX, 2) + pow(deltaY, 2));
+    float theta = tan(deltaY / deltaX);
+
+    turn_ToAngle(theta, L);
+    move_DriveFor(Fwd, distance);
+
+    _x = x;
+    _y = y;
+  }
+
 private:
   void move_DriveFor(DirectionStraight direction, uint distance,
                      int slewRate = 15, uint velocity = 1000, uint timeout = 0,

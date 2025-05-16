@@ -40,8 +40,7 @@ void autonomous() {
   botNT.CALIBRATE();
   botNT.move_TurnFor(PID, Left, 90);
   botNT.move_DriveFor(PID, Fwd, 12);
-  botNT.stop();
-}
+  botNT.stop();}
 
 void opcontrol() {
   int power;
@@ -51,9 +50,7 @@ void opcontrol() {
   while (true) {
     power = userinput.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
     turn = userinput.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-    power = power = 0 ? -1 : power;
-    turn = turn = 0 ? -1 : turn;
-    if (power != -1) {
+    if (power != 0) {
       leftPower =
           DT4D::applySlew(leftPower, power + turn, 10 + (10.0 * power / 100));
       rightPower =
