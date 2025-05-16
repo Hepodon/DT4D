@@ -7,7 +7,7 @@
 using namespace pros;
 using namespace std;
 
-PIDsettings pids(100, 5, 15, 100);
+DT4D::PIDsettings pids(100, 5, 15, 100);
 
 MotorGroup aright({5, 10}, v5::MotorGears::green,
                   v5::MotorEncoderUnits::degrees);
@@ -18,13 +18,13 @@ Imu inertial(12);
 
 Controller userinput(E_CONTROLLER_MASTER);
 
-DTSettings saettings(10, 4, 1, 9, 1, 2, 2, 2, 2);
-DTSettingsNT settings(10, 4, 1, 9, 1, 2, 2, 2, 2, 100, 100);
+DT4D::DTSettings saettings(10, 4, 1, 9, 1, 2, 2, 2, 2);
+DT4D::DTSettingsNT settings(10, 4, 1, 9, 1, 2, 2, 2, 2, 100, 100);
 
-Drivetrain4Dummies bot(pids, aleft, -5, aright, 5, saettings, inertial);
+DT4D::Drivetrain4Dummies bot(pids, aleft, -5, aright, 5, saettings, inertial);
 
-Drivetrain4DummiesNT botNT(pids, aleft, -5, aright, 5, settings, inertial,
-                           userinput);
+DT4D::Drivetrain4DummiesNT botNT(pids, aleft, -5, aright, 5, settings, inertial,
+                                 userinput);
 
 void initialize() {
   aleft.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
@@ -49,8 +49,8 @@ void opcontrol() {
     power = power = 0 ? -1 : power;
     turn = turn = 0 ? -1 : turn;
 
-    leftPower = applySlew(leftPower, power + turn, 10);
-    rightPower = applySlew(rightPower, power - turn, 10);
+    leftPower = DT4D::applySlew(leftPower, power + turn, 10);
+    rightPower = DT4D::applySlew(rightPower, power - turn, 10);
 
     aleft.move(leftPower);
     aright.move(rightPower);

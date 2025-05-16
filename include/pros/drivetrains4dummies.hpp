@@ -16,6 +16,7 @@ enum BrakingType { COAST = 0, BRAKE = 1, HOLD = 2, DEFAULT = 3 };
 
 namespace pros {
 inline namespace v5 {
+namespace DT4D {
 inline int applySlew(int current, int target, int rate = 5) {
   int diff = target - current;
   if (abs(diff) > rate)
@@ -260,7 +261,7 @@ public:
   }
 
   void move_DriveFor(bool PID, DirectionStraight direction, uint distance,
-                     uint velocity = 1000, uint timeout = 0,
+                     int slewRate = 15, uint velocity = 1000, uint timeout = 0,
                      bool async = true) {
     if (!PID) {
       if (velocity == 1000)
@@ -294,6 +295,7 @@ public:
       double lastError = 0;
       double derivative;
       double integral = 0;
+      float lastOutput = 0;
 
       const double wheelCircumference = _settings.get_WheelDiameter() * M_PI;
       const double degPerInch =
@@ -318,6 +320,11 @@ public:
 
         output = std::max(std::min(output, _PIDset.get_maxSpeed()),
                           _PIDset.get_minSpeed());
+        double delta = output - lastOutput;
+        if (std::abs(delta) > slewRate)
+          output = lastOutput + slewRate * (delta > 0 ? 1 : -1);
+
+        lastOutput = output;
 
         _leftMotors.move_velocity(output);
         _rightMotors.move_velocity(output);
@@ -349,7 +356,8 @@ public:
   }
 
   void move_TurnFor(bool PID, DirectionTurn direction, uint theta,
-                    uint velocity = 1000, uint timeout = 0, bool async = true) {
+                    int slewRate = 5, uint velocity = 1000, uint timeout = 0,
+                    bool async = true) {
     if (!PID) {
       if (velocity == 1000)
         velocity = _settings.get_turnVelocity();
@@ -378,7 +386,6 @@ public:
       double lastError = 0;
       double integral = 0;
       double derivative = 0;
-      double output = 0;
 
       const double maxOutput = _PIDset.get_maxSpeed();
       const double integralLimit = maxOutput;
@@ -386,9 +393,7 @@ public:
       const double threshold = _PIDset.get_threshold();
       const int settleTime = _PIDset.get_checkTime();
 
-      // 🔧 Slew setup
-      const double slewRate = 5; // max change per loop (adjust as needed)
-      double lastOutput = 0;
+      float lastOutput = 0;
 
       int withinThresholdTime = 0;
 
@@ -412,7 +417,6 @@ public:
         if (std::abs(rawOutput) < minSpeed && std::abs(error) > threshold)
           rawOutput = minSpeed * (rawOutput > 0 ? 1 : -1);
 
-        // 💡 Slew control logic
         double delta = rawOutput - lastOutput;
         if (std::abs(delta) > slewRate)
           rawOutput = lastOutput + slewRate * (delta > 0 ? 1 : -1);
@@ -456,6 +460,7 @@ public:
   }
   /* ================================================================= */
 };
+} // namespace DT4D
 } // namespace v5
 } // namespace pros
 
