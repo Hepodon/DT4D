@@ -179,6 +179,7 @@ public:
         turn_ToAngle(90, L);
       }
     }
+    move_DriveFor(Fwd, distance);
   }
 
   void moveY(int distance) {
@@ -202,13 +203,20 @@ public:
           turn_ToAngle(90, L);
         }
       }
+      move_DriveFor(Fwd, distance);
     }
   }
 
   void move_ToPos(int x, int y, bool Xfirst = true) {
     int deltaX = x - _x;
+    int deltaY = y - _y;
     if (Xfirst) {
       moveX(deltaX);
+      moveY(deltaY);
+    } else {
+      moveY(deltaY);
+      moveX(deltaX);
+      
     }
   }
 
