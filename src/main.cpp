@@ -40,7 +40,8 @@ void autonomous() {
   botNT.CALIBRATE();
   botNT.move_TurnFor(PID, Left, 90);
   botNT.move_DriveFor(PID, Fwd, 12);
-  botNT.stop();}
+  botNT.stop();
+}
 
 void opcontrol() {
   int power;

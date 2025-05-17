@@ -1,5 +1,7 @@
 // sup this is my files
 
+#pragma once
+
 #ifndef PROS_DRIVETRAINS4DUMMIES_HPP
 #define PROS_DRIVETRAINS4DUMMIES_HPP
 
@@ -273,6 +275,7 @@ private:
 
       output = std::max(std::min(output, _PIDset.get_maxSpeed()),
                         _PIDset.get_minSpeed());
+
       double delta = output - lastOutput;
       if (std::abs(delta) > slewRate)
         output = lastOutput + slewRate * (delta > 0 ? 1 : -1);
