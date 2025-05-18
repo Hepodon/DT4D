@@ -17,8 +17,20 @@ enum MoveType { PID, Relative, Basic };
 namespace pros {
 inline namespace v5 {
 namespace DT4D {
-inline float applySlew(int current, int target, float rate = 5);
+float applySlew(int current, int target, float rate = 5);
 
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
 class PIDsettings {
 public:
   PIDsettings(int checkTime, double threshold, double minSpeed,
@@ -35,6 +47,18 @@ private:
   double _minSpeed;
   double _maxSpeed;
 };
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
 class DTSettingsNT {
 
 public:
@@ -79,6 +103,18 @@ public:
   int _driveVelocity;
   int _turnVelocity;
 };
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
 class DTSettings {
 
 public:
@@ -116,6 +152,20 @@ public:
   int _wheelDiameter;
   int _gearRatio;
 };
+
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+
 class Drivetrain4Dummies {
 
 public:
@@ -166,11 +216,21 @@ private:
 
   void turn_ToAngle(int angle, DirectionTurn Direction);
 };
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
 class Drivetrain4DummiesNT {
 
 public:
-  /* ========================= CLASS ========================= */
-
   Drivetrain4DummiesNT(PIDsettings &PIDset, MotorGroup &leftMotors,
                        int leftDistance, MotorGroup &rightMotors,
                        int rightDistance, DTSettingsNT &settings, Imu &inertial,
@@ -184,264 +244,35 @@ public:
   Controller &_controller;
   PIDsettings &_PIDset;
 
-  void CALIBRATE() { _inertial.reset(true); }
-  /* =========================================================== */
+  void CALIBRATE();
 
-  /* =========================== GET =========================== */
+  int get_wheelbase() const;
+  int get_wheelDiameter() const;
+  int get_gearRatio() const;
+  int get_driveVelocity() const;
+  int get_turnVelocity() const;
 
-  int get_wheelbase() const { return _settings.get_Wheelbase(); }
-  int get_wheelDiameter() const { return _settings.get_WheelDiameter(); }
-  int get_gearRatio() const { return _settings.get_GearRatio(); }
-  int get_driveVelocity() const { return _settings.get_driveVelocity(); }
-  int get_turnVelocity() const { return _settings.get_turnVelocity(); }
-  /* =========================================================== */
-
-  /* =========================== SET =========================== */
-
-  void set_Wheelbase(int Wheelbase) { _settings.set_Wheelbase(Wheelbase); }
-  void set_WheelDiameter(int WheelDiameter) {
-    _settings.set_WheelDiameter(WheelDiameter);
-  }
-  void set_GearRatio(int GearRatio) { _settings.set_GearRatio(GearRatio); }
-  void set_driveVelocity(int driveVelocity) {
-    _settings.set_driveVelocity(driveVelocity);
-  }
-  void set_turnVelocity(int turnVelocity) {
-    _settings.set_turnVelocity(turnVelocity);
-  }
-  /* =========================================================== */
-
-  /* ========================= MOVEMENT DRIVE ========================= */
+  void set_Wheelbase(int Wheelbase);
+  void set_WheelDiameter(int WheelDiameter);
+  void set_GearRatio(int GearRatio);
+  void set_driveVelocity(int driveVelocity);
+  void set_turnVelocity(int turnVelocity);
 
   void move_Drive(DirectionStraight direction, uint velocity = 1000,
-                  uint timeout = 0) {
-    if (velocity == 1000)
-      velocity = _settings.get_driveVelocity();
-    switch (direction) {
-    case 1:
-      _leftMotors.move(velocity);
-      _rightMotors.move(velocity);
-      break;
-
-    case -1:
-      _leftMotors.move(-velocity);
-      _rightMotors.move(-velocity);
-      break;
-    }
-    delay(timeout);
-  }
+                  uint timeout = 0);
 
   void move_DriveFor(MoveType MT, DirectionStraight direction, uint distance,
                      int slewRate = 15, uint velocity = 1000, uint timeout = 0,
-                     bool async = true) {
-    switch (MT) {
-    case Relative: {
-      if (velocity == 1000)
-        velocity = _settings.get_driveVelocity();
-      int start = _leftMotors.get_position();
-
-      int Motordegrees =
-          360 * ((distance / (M_PI * _settings.get_WheelDiameter())) *
-                 _settings.get_GearRatio());
-
-      switch (direction) {
-      case 1:
-        _leftMotors.move_relative(Motordegrees, velocity);
-        _leftMotors.move_relative(Motordegrees, velocity);
-        break;
-
-      case -1:
-        _leftMotors.move_relative(-Motordegrees, -velocity);
-        _leftMotors.move_relative(-Motordegrees, -velocity);
-        break;
-      }
-      if (async) {
-        while (_leftMotors.get_position() - start < Motordegrees)
-          delay(20);
-      }
-      delay(timeout);
-      break;
-    }
-    case PID: {
-      _leftMotors.tare_position();
-      _leftMotors.tare_position();
-
-      double error;
-      double lastError = 0;
-      double derivative;
-      double integral = 0;
-      float lastOutput = 0;
-
-      const double wheelCircumference = _settings.get_WheelDiameter() * M_PI;
-      const double degPerInch =
-          360.0 * _settings.get_GearRatio() / wheelCircumference;
-      const double targetPosition = distance * degPerInch;
-
-      while (true) {
-        int currentPosition =
-            (_leftMotors.get_position() + -_rightMotors.get_position()) / 2.0;
-        error = targetPosition - currentPosition;
-
-        if (fabs(error) < _PIDset.get_threshold())
-          break;
-
-        integral += error;
-        derivative = error - lastError;
-        lastError = error;
-
-        double output = _settings.get_DkP() * error +
-                        _settings.get_DkI() * integral +
-                        _settings.get_DkD() * derivative;
-
-        output = std::max(std::min(output, _PIDset.get_maxSpeed()),
-                          _PIDset.get_minSpeed());
-        double delta = output - lastOutput;
-        if (std::abs(delta) > slewRate)
-          output = lastOutput + slewRate * (delta > 0 ? 1 : -1);
-
-        lastOutput = output;
-
-        _leftMotors.move_velocity(output);
-        _rightMotors.move_velocity(output);
-        delay(20);
-      }
-    }
-    case Basic: {
-    }
-    }
-  }
-  /* ================================================================== */
-
-  /* ========================= MOVEMENT TURN ========================= */
+                     bool async = true);
 
   void move_Turn(DirectionTurn direction, uint velocity = 1000,
-                 uint timeout = 0) {
-    if (velocity == 1000)
-      velocity = _settings.get_turnVelocity();
-    switch (direction) {
-    case 1:
-      _leftMotors.move(-velocity);
-      _rightMotors.move(velocity);
-      break;
-
-    case -1:
-      _leftMotors.move(velocity);
-      _rightMotors.move(-velocity);
-      break;
-    }
-    delay(timeout);
-  }
+                 uint timeout = 0);
 
   void move_TurnFor(MoveType MT, DirectionTurn direction, uint theta,
                     int slewRate = 5, uint velocity = 1000, uint timeout = 0,
-                    bool async = true) {
-    switch (MT) {
-    case 1: {
-      if (velocity == 1000)
-        velocity = _settings.get_turnVelocity();
-      int Motordegrees =
-          (_settings.get_Wheelbase() * theta) / _settings.get_WheelDiameter();
-      int start = _leftMotors.get_position();
-      switch (direction) {
-      case 1:
-        _leftMotors.move_relative(-Motordegrees, -velocity);
-        _rightMotors.move_relative(Motordegrees, velocity);
-        break;
+                    bool async = true);
 
-      case -1:
-        _leftMotors.move_relative(Motordegrees, velocity);
-        _rightMotors.move_relative(-Motordegrees, -velocity);
-        break;
-      }
-      if (async) {
-        while (_leftMotors.get_position() - start < Motordegrees)
-          delay(20);
-      }
-      break;
-    }
-    case 0: {
-      double error = 0;
-      double lastError = 0;
-      double integral = 0;
-      double derivative = 0;
-
-      const double maxOutput = _PIDset.get_maxSpeed();
-      const double integralLimit = maxOutput;
-      const double minSpeed = _PIDset.get_minSpeed();
-      const double threshold = _PIDset.get_threshold();
-      const int settleTime = _PIDset.get_checkTime();
-      double rawOutput = 0;
-
-      float lastOutput = 0;
-
-      int withinThresholdTime = 0;
-
-      while (withinThresholdTime < settleTime) {
-        double currentAngle = _inertial.get_heading();
-        error = theta - currentAngle;
-
-        integral += error;
-        if (std::abs(error) > integralLimit)
-          integral = 0;
-
-        derivative = error - lastError;
-        lastError = error;
-
-        rawOutput = _settings.get_kP() * error + _settings.get_kI() * integral +
-                    _settings.get_kD() * derivative;
-
-        rawOutput = std::clamp(rawOutput, -maxOutput, maxOutput);
-
-        if (std::abs(rawOutput) < minSpeed && std::abs(error) > threshold)
-          rawOutput = minSpeed * (rawOutput > 0 ? 1 : -1);
-
-        double delta = rawOutput - lastOutput;
-        if (std::abs(delta) > slewRate)
-          rawOutput = lastOutput + slewRate * (delta > 0 ? 1 : -1);
-
-        lastOutput = rawOutput;
-
-        _leftMotors.move(-rawOutput);
-        _rightMotors.move(rawOutput);
-
-        if (std::abs(error) < threshold)
-          withinThresholdTime += 10;
-        else
-          withinThresholdTime = 0;
-
-        pros::delay(10);
-      }
-      break;
-    }
-    case Basic: {
-    }
-    }
-  }
-
-  /* ================================================================= */
-
-  /* ========================= MOVEMENT STOP ========================= */
-
-  void stop(BrakingType type = DEFAULT) {
-    switch (type) {
-    case COAST:
-    case DEFAULT:
-      _leftMotors.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-      _rightMotors.set_brake_mode(pros::E_MOTOR_BRAKE_COAST);
-      break;
-    case HOLD:
-      _leftMotors.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-      _rightMotors.set_brake_mode(pros::E_MOTOR_BRAKE_HOLD);
-      break;
-    case BRAKE:
-      _leftMotors.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-      _rightMotors.set_brake_mode(pros::E_MOTOR_BRAKE_BRAKE);
-      break;
-    }
-    _leftMotors.brake();
-    _leftMotors.brake();
-  }
-  /* ================================================================= */
+  void stop(BrakingType type = DEFAULT);
 };
 } // namespace DT4D
 } // namespace v5

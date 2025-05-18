@@ -304,7 +304,7 @@ void Drivetrain4DummiesNT::set_turnVelocity(int turnVelocity) {
 /* ========================= MOVEMENT DRIVE ========================= */
 
 void Drivetrain4DummiesNT::move_Drive(DirectionStraight direction,
-                                      uint velocity = 1000, uint timeout = 0) {
+                                      uint velocity, uint timeout) {
   if (velocity == 1000)
     velocity = _settings.get_driveVelocity();
   switch (direction) {
@@ -323,9 +323,9 @@ void Drivetrain4DummiesNT::move_Drive(DirectionStraight direction,
 
 void Drivetrain4DummiesNT::move_DriveFor(MoveType MT,
                                          DirectionStraight direction,
-                                         uint distance, int slewRate = 15,
-                                         uint velocity = 1000, uint timeout = 0,
-                                         bool async = true) {
+                                         uint distance, int slewRate,
+                                         uint velocity, uint timeout,
+                                         bool async) {
   switch (MT) {
   case Relative: {
     if (velocity == 1000)
@@ -406,8 +406,8 @@ void Drivetrain4DummiesNT::move_DriveFor(MoveType MT,
 
 /* ========================= MOVEMENT TURN ========================= */
 
-void Drivetrain4DummiesNT::move_Turn(DirectionTurn direction,
-                                     uint velocity = 1000, uint timeout = 0) {
+void Drivetrain4DummiesNT::move_Turn(DirectionTurn direction, uint velocity,
+                                     uint timeout) {
   if (velocity == 1000)
     velocity = _settings.get_turnVelocity();
   switch (direction) {
@@ -425,9 +425,8 @@ void Drivetrain4DummiesNT::move_Turn(DirectionTurn direction,
 }
 
 void Drivetrain4DummiesNT::move_TurnFor(MoveType MT, DirectionTurn direction,
-                                        uint theta, int slewRate = 5,
-                                        uint velocity = 1000, uint timeout = 0,
-                                        bool async = true) {
+                                        uint theta, int slewRate, uint velocity,
+                                        uint timeout, bool async) {
   switch (MT) {
   case 1: {
     if (velocity == 1000)
@@ -515,7 +514,7 @@ void Drivetrain4DummiesNT::move_TurnFor(MoveType MT, DirectionTurn direction,
 
 /* ========================= MOVEMENT STOP ========================= */
 
-void Drivetrain4DummiesNT::stop(BrakingType type = DEFAULT) {
+void Drivetrain4DummiesNT::stop(BrakingType type) {
   switch (type) {
   case COAST:
   case DEFAULT:
