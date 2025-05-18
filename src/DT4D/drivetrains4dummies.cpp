@@ -13,11 +13,11 @@ float applySlew(int current, int target, float rate = 5) {
 
 int PIDsettings::get_checkTime() const { return _checkTime; }
 
-double PIDsettings::get_threshold() const { return _threshold; }
+int PIDsettings::get_threshold() const { return _threshold; }
 
-double PIDsettings::get_minSpeed() const { return _minSpeed; }
+int PIDsettings::get_minSpeed() const { return _minSpeed; }
 
-double PIDsettings::get_maxSpeed() const { return _maxSpeed; }
+int PIDsettings::get_maxSpeed() const { return _maxSpeed; }
 
 int DTSettingsNT::get_Wheelbase() const { return _wheelbase; }
 int DTSettingsNT::get_WheelDiameter() const { return _wheelDiameter; }
@@ -29,7 +29,7 @@ void DTSettingsNT::set_Wheelbase(int Wheelbase) { _wheelbase = Wheelbase; }
 void DTSettingsNT::set_WheelDiameter(int WheelDiameter) {
   _wheelDiameter = WheelDiameter;
 }
-void DTSettingsNT::set_GearRatio(int GearRatio) { _gearRatio = GearRatio; }
+void DTSettingsNT::set_gearRatio(float GearRatio) { _gearRatio = GearRatio; }
 void DTSettingsNT::set_driveVelocity(int driveVelocity) {
   _driveVelocity = driveVelocity;
 }
@@ -68,8 +68,8 @@ void Drivetrain4Dummies::set_Wheelbase(int Wheelbase) {
 void Drivetrain4Dummies::set_WheelDiameter(int WheelDiameter) {
   _settings.set_WheelDiameter(WheelDiameter);
 }
-void Drivetrain4Dummies::set_GearRatio(int GearRatio) {
-  _settings.set_GearRatio(GearRatio);
+void Drivetrain4Dummies::set_gearRatio(float GearRatio) {
+  _settings.set_gearRatio(GearRatio);
 }
 void Drivetrain4Dummies::set_Pos(int x, int y) {
   _x = x;
@@ -183,8 +183,8 @@ void Drivetrain4Dummies::move_DriveFor(DirectionStraight direction,
                     _settings.get_DkI() * integral +
                     _settings.get_DkD() * derivative;
 
-    output = std::max(std::min(output, _PIDset.get_maxSpeed()),
-                      _PIDset.get_minSpeed());
+    output = std::clamp(output, static_cast<double>(_PIDset.get_minSpeed()),
+                        static_cast<double>(_PIDset.get_maxSpeed()));
 
     double delta = output - lastOutput;
     if (std::abs(delta) > slewRate)
@@ -290,8 +290,8 @@ void Drivetrain4DummiesNT::set_Wheelbase(int Wheelbase) {
 void Drivetrain4DummiesNT::set_WheelDiameter(int WheelDiameter) {
   _settings.set_WheelDiameter(WheelDiameter);
 }
-void Drivetrain4DummiesNT::set_GearRatio(int GearRatio) {
-  _settings.set_GearRatio(GearRatio);
+void Drivetrain4DummiesNT::set_gearRatio(float gearRatio) {
+  _settings.set_gearRatio(gearRatio);
 }
 void Drivetrain4DummiesNT::set_driveVelocity(int driveVelocity) {
   _settings.set_driveVelocity(driveVelocity);
@@ -385,8 +385,8 @@ void Drivetrain4DummiesNT::move_DriveFor(MoveType MT,
                       _settings.get_DkI() * integral +
                       _settings.get_DkD() * derivative;
 
-      output = std::max(std::min(output, _PIDset.get_maxSpeed()),
-                        _PIDset.get_minSpeed());
+      output = std::clamp(output, static_cast<double>(_PIDset.get_minSpeed()),
+                          static_cast<double>(_PIDset.get_maxSpeed()));
       double delta = output - lastOutput;
       if (std::abs(delta) > slewRate)
         output = lastOutput + slewRate * (delta > 0 ? 1 : -1);

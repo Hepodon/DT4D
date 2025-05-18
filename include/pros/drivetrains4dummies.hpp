@@ -17,6 +17,16 @@ enum MoveType { PID, Relative, Basic };
 namespace pros {
 inline namespace v5 {
 namespace DT4D {
+
+/**
+ *  Applys slew rates to value input with
+ * current value and target, using optional rate
+ *
+ *@param current int Current value
+ *@param target int target value
+ *@param rate float rate of change value
+ *
+ */
 float applySlew(int current, int target, float rate = 5);
 
 /*==========================================================================*/
@@ -33,19 +43,34 @@ float applySlew(int current, int target, float rate = 5);
 /*==========================================================================*/
 class PIDsettings {
 public:
-  PIDsettings(int checkTime, double threshold, double minSpeed,
-              double maxSpeed);
+  /**
+   * Constructs a PIDsettings object with custom PID parameters.
+   *
+   * @param checkTime   int Time to remain within threshold to consider settled.
+   * @param threshold   double Error threshold to stop movement.
+   * @param minSpeed    double Minimum motor speed.
+   * @param maxSpeed    double Maximum motor speed.
+   */
+  PIDsettings(int checkTime, int threshold, int minSpeed,
+              int maxSpeed);
 
+  /// Returns int checkTime as a constant
   int get_checkTime() const;
-  double get_threshold() const;
-  double get_minSpeed() const;
-  double get_maxSpeed() const;
+
+  /// Returns double threshold as a constant
+  int get_threshold() const;
+
+  /// Returns double minSpeed as a constant
+  int get_minSpeed() const;
+
+  /// Returns double maxSpeed as a constant
+  int get_maxSpeed() const;
 
 private:
   int _checkTime;
-  double _threshold;
-  double _minSpeed;
-  double _maxSpeed;
+  int _threshold;
+  int _minSpeed;
+  int _maxSpeed;
 };
 /*==========================================================================*/
 /*==========================================================================*/
@@ -62,6 +87,21 @@ private:
 class DTSettingsNT {
 
 public:
+  /**
+   * Constructs a DTSettingsNT object with custom drivetrain parameters
+   * using chassis measurements and previous constructs
+   *This is used for No Tracking Drivetrain settings
+   *
+   *@param Wheelbase int distance in inches between front left and right wheels
+   *@param WheelDiameter int diameter of wheel in inches
+   *@param gearRatio float gear ratio of motor to wheels
+   *@param kp double turning proportional gain
+   *@param ki double turning integral gain
+   *@param kd doube turning derivative gain
+   *@param DkP double driving proportional gain
+   *@param DkI double driving integral gain
+   *@param DkD double driving derivative gain
+   */
   DTSettingsNT(int Wheelbase, int WheelDiameter, float GearRatio, double kP,
                double kI, double kD, double DkP, double DkI, double DkD,
                int driveVelocity = 50, int turnVelocity = 35)
@@ -70,23 +110,67 @@ public:
         _turnVelocity(turnVelocity), _kP(kP), _kI(kI), _kD(kD), D_kP(DkP),
         D_kI(DkI), D_kD(DkD) {}
 
+  /// Returns int wheelbase as a constant
   int get_Wheelbase() const;
+
+  /// Returns int wheelDiameter as a constant
   int get_WheelDiameter() const;
+
+  /// Returns int gearRatio as a constant
   float get_GearRatio() const;
+
+  /// Returns int drive velocity as a constant
   int get_driveVelocity() const;
+
+  /// Returns int turn velocity as a constant
   int get_turnVelocity() const;
 
+  /**
+   * provides new value for wheelbase construct
+   *@param wheelbase int distance in inches between front left and right wheels
+   */
   void set_Wheelbase(int Wheelbase);
+
+  /**
+   * provides new value for wheelDiameter construct
+   *@param wheelDiameter int diameter of wheel in inches
+   */
   void set_WheelDiameter(int WheelDiameter);
-  void set_GearRatio(int GearRatio);
+
+  /**
+   * provides new value for GearRatio construct
+   *@param gearRatio int distance in inches between front left and right wheels
+   */
+  void set_gearRatio(float gearRatio);
+
+  /**
+   * provides new value for diving velocity construct
+   *@param driveVelocity int defualt velocity used for driving
+   */
   void set_driveVelocity(int driveVelocity);
+
+  /**
+   * provides new value for turning velocity construct
+   *@param turnVelocity int defualt velocity used for turning
+   */
   void set_turnVelocity(int turnVelocity);
 
+  /// Returns int turning Proportional as a constant
   double get_kP() const;
+
+  /// Returns int turning Integral as a constant
   double get_kI() const;
+
+  /// Returns int turning Derivative as a constant
   double get_kD() const;
+
+  /// Returns int driving Proportional as a constant
   double get_DkP() const;
+
+  /// Returns int driving Integral as a constant
   double get_DkI() const;
+
+  /// Returns int driving Derivative as a constant
   double get_DkD() const;
 
   double _kP;
@@ -130,7 +214,7 @@ public:
 
   void set_Wheelbase(int Wheelbase) { _wheelbase = Wheelbase; }
   void set_WheelDiameter(int WheelDiameter) { _wheelDiameter = WheelDiameter; }
-  void set_GearRatio(int GearRatio) { _gearRatio = GearRatio; }
+  void set_gearRatio(int gearRatio) { _gearRatio = gearRatio; }
 
   double get_kP() const { return _kP; }
   double get_kI() const { return _kI; }
@@ -150,7 +234,7 @@ public:
 
   int _wheelbase;
   int _wheelDiameter;
-  int _gearRatio;
+  float _gearRatio;
 };
 
 /*==========================================================================*/
@@ -194,7 +278,7 @@ public:
 
   void set_Wheelbase(int Wheelbase);
   void set_WheelDiameter(int WheelDiameter);
-  void set_GearRatio(int GearRatio);
+  void set_gearRatio(float gearRatio);
   void set_Pos(int x, int y);
   void set_angle(int theta);
 
@@ -254,7 +338,7 @@ public:
 
   void set_Wheelbase(int Wheelbase);
   void set_WheelDiameter(int WheelDiameter);
-  void set_GearRatio(int GearRatio);
+  void set_gearRatio(float gearRatio);
   void set_driveVelocity(int driveVelocity);
   void set_turnVelocity(int turnVelocity);
 
