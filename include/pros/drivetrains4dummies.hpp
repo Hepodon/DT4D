@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "pros/rotation.hpp"
 #ifndef PROS_DRIVETRAINS4DUMMIES_HPP
 #define PROS_DRIVETRAINS4DUMMIES_HPP
 
@@ -27,6 +28,62 @@ namespace DT4D {
  *
  */
 float applySlew(int current, int target, float rate = 5);
+
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+
+class Trackingwheel {
+public:
+  Trackingwheel(Rotation &WheelSensor, float gearRatio, int distance,
+                int wheelDiameter)
+      : _WheelSensor(WheelSensor), _gearRatio(gearRatio), _distance(distance),
+        _wheelDiameter(wheelDiameter) {}
+
+  float get_gearRatio() const;
+  int get_distance() const;
+  int get_wheelDiameter() const;
+  int get_position();
+  void set_position(int pos);
+
+  Rotation &_WheelSensor;
+  float _gearRatio;
+  int _distance;
+  int _wheelDiameter;
+};
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+
+class OdomSensors {
+public:
+  OdomSensors(Trackingwheel &vertical1, Trackingwheel &vertical2,
+              Trackingwheel &horizontal1, Imu &inertial)
+      : _horizontal1(horizontal1), _vertical1(vertical1), _vertical2(vertical2),
+        _inertial(inertial) {}
+  Trackingwheel &_vertical1;
+  Trackingwheel &_vertical2;
+  Trackingwheel &_horizontal1;
+  Imu &_inertial;
+};
 
 /*==========================================================================*/
 /*==========================================================================*/
@@ -214,7 +271,7 @@ public:
 
   void set_Wheelbase(int Wheelbase);
   void set_WheelDiameter(int WheelDiameter);
-  void set_gearRatio(int gearRatio);
+  void set_GearRatio(float gearRatio);
 
   double get_kP() const;
   double get_kI() const;
@@ -256,7 +313,7 @@ public:
   Drivetrain4Dummies(PIDsettings &PIDset, MotorGroup &leftMotors,
                      int leftDistance, MotorGroup &rightMotors,
                      int rightDistance, DTSettings &settings, Imu &inertial,
-                     Controller *con = nullptr)
+                     Controller *con)
       : _leftMotors(leftMotors), _rightMotors(rightMotors), _inertial(inertial),
         _settings(settings), _con(con), _PIDset(PIDset) {}
   MotorGroup &_leftMotors;
@@ -357,6 +414,32 @@ public:
                     bool async = true);
 
   void stop(BrakingType type = DEFAULT);
+};
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+/*==========================================================================*/
+class Drivetrain4DummiesOdom {
+public:
+  Drivetrain4DummiesOdom(PIDsettings &PIDset, MotorGroup &leftMotors,
+                         MotorGroup &rightMotors, DTSettings &settings,
+                         OdomSensors &ODOM)
+
+      : _leftMotors(leftMotors), _rightMotors(rightMotors), _Odom(ODOM),
+        _settings(settings), _PIDset(PIDset) {}
+  MotorGroup &_leftMotors;
+  MotorGroup &_rightMotors;
+  OdomSensors &_Odom;
+  DTSettings &_settings;
+  PIDsettings &_PIDset;
 };
 } // namespace DT4D
 } // namespace pros

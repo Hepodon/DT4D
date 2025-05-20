@@ -6,9 +6,12 @@
 
 using namespace pros;
 using namespace std;
-using namespace DT4D;
 
 DT4D::PIDsettings pids(100, 5, 15, 100);
+
+Rotation hor1(-15);
+Rotation vert1(11);
+Rotation vert2(-12);
 
 MotorGroup aright({1, 2, 3}, v5::MotorGears::blue,
                   v5::MotorEncoderUnits::degrees);
@@ -17,12 +20,16 @@ MotorGroup aleft({-20, -19, -7}, v5::MotorGears::green,
 
 Imu inertial(12);
 
+DT4D::Trackingwheel LEFTVERT(vert1, 1, -5, 2);
+DT4D::Trackingwheel RIGHTVERT(vert2, 1, 5, 2);
+DT4D::Trackingwheel BACKHOR(hor1, 1, 0, 2);
+
+DT4D::OdomSensors Sensors(LEFTVERT, RIGHTVERT, BACKHOR, inertial);
+
 Controller userinput(E_CONTROLLER_MASTER);
 
 DT4D::DTSettings saettings(10, 4, 1, 9, 1, 2, 2, 2, 2);
 DT4D::DTSettingsNT settings(10, 4, 1, 9, 1, 2, 2, 2, 2, 100, 100);
-
-DT4D::Drivetrain4Dummies bot(pids, aleft, -5, aright, 5, saettings, inertial);
 
 DT4D::Drivetrain4DummiesNT botNT(pids, aleft, -5, aright, 5, settings, inertial,
                                  userinput);
@@ -52,14 +59,14 @@ void opcontrol() {
   int rightPower = 0;
 
   const float driveSlewRate = 8;
-  const float turnSlewRate = 20;
+  const float turnSlewRate = 16;
 
   while (true) {
     float rawDrive = userinput.get_analog(E_CONTROLLER_ANALOG_LEFT_Y);
     float rawTurn = userinput.get_analog(E_CONTROLLER_ANALOG_RIGHT_X);
 
-    driveValue = applySlew(driveValue, rawDrive, driveSlewRate);
-    turnValue = applySlew(turnValue, rawTurn, turnSlewRate);
+    driveValue = DT4D::applySlew(driveValue, rawDrive, driveSlewRate);
+    turnValue = DT4D::applySlew(turnValue, rawTurn, turnSlewRate);
 
     leftPower = driveValue + turnValue;
     rightPower = driveValue - turnValue;

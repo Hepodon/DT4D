@@ -10,6 +10,13 @@ float applySlew(int current, int target, float rate) {
   return target;
 }
 
+int Trackingwheel::get_position() { return _WheelSensor.get_position(); }
+void Trackingwheel::set_position(int pos) { _WheelSensor.set_position(pos); }
+
+float Trackingwheel::get_gearRatio() const { return _gearRatio; }
+int Trackingwheel::get_wheelDiameter() const { return _wheelDiameter; }
+int Trackingwheel::get_distance() const { return _distance; }
+
 int PIDsettings::get_checkTime() const { return _checkTime; }
 
 int PIDsettings::get_threshold() const { return _threshold; }
@@ -24,17 +31,27 @@ float DTSettingsNT::get_GearRatio() const { return _gearRatio; }
 int DTSettingsNT::get_driveVelocity() const { return _driveVelocity; }
 int DTSettingsNT::get_turnVelocity() const { return _turnVelocity; }
 
+int DTSettings::get_Wheelbase() const { return _wheelbase; }
+int DTSettings::get_WheelDiameter() const { return _wheelDiameter; }
+float DTSettings::get_GearRatio() const { return _gearRatio; }
+
 void DTSettingsNT::set_Wheelbase(int Wheelbase) { _wheelbase = Wheelbase; }
 void DTSettingsNT::set_WheelDiameter(int WheelDiameter) {
   _wheelDiameter = WheelDiameter;
 }
-void DTSettingsNT::set_gearRatio(float GearRatio) { _gearRatio = GearRatio; }
+void DTSettingsNT::set_gearRatio(float gearRatio) { _gearRatio = gearRatio; }
 void DTSettingsNT::set_driveVelocity(int driveVelocity) {
   _driveVelocity = driveVelocity;
 }
 void DTSettingsNT::set_turnVelocity(int turnVelocity) {
   _turnVelocity = turnVelocity;
 }
+
+void DTSettings::set_Wheelbase(int Wheelbase) { _wheelbase = Wheelbase; }
+void DTSettings::set_WheelDiameter(int WheelDiameter) {
+  _wheelDiameter = WheelDiameter;
+}
+void DTSettings::set_GearRatio(float gearRatio) { _gearRatio = gearRatio; }
 
 double DTSettingsNT::get_kP() const { return _kP; }
 double DTSettingsNT::get_kI() const { return _kI; }
@@ -43,6 +60,14 @@ double DTSettingsNT::get_kD() const { return _kD; }
 double DTSettingsNT::get_DkP() const { return D_kP; }
 double DTSettingsNT::get_DkI() const { return D_kI; }
 double DTSettingsNT::get_DkD() const { return D_kD; }
+
+double DTSettings::get_kP() const { return _kP; }
+double DTSettings::get_kI() const { return _kI; }
+double DTSettings::get_kD() const { return _kD; }
+
+double DTSettings::get_DkP() const { return D_kP; }
+double DTSettings::get_DkI() const { return D_kI; }
+double DTSettings::get_DkD() const { return D_kD; }
 
 void Drivetrain4Dummies::CALIBRATE(int x, int y, int theta) {
   _inertial.reset(true);
@@ -67,8 +92,8 @@ void Drivetrain4Dummies::set_Wheelbase(int Wheelbase) {
 void Drivetrain4Dummies::set_WheelDiameter(int WheelDiameter) {
   _settings.set_WheelDiameter(WheelDiameter);
 }
-void Drivetrain4Dummies::set_gearRatio(float GearRatio) {
-  _settings.set_gearRatio(GearRatio);
+void Drivetrain4Dummies::set_gearRatio(float gearRatio) {
+  _settings.set_GearRatio(gearRatio);
 }
 void Drivetrain4Dummies::set_Pos(int x, int y) {
   _x = x;
@@ -532,7 +557,6 @@ void Drivetrain4DummiesNT::stop(BrakingType type) {
   _leftMotors.brake();
   _leftMotors.brake();
 }
-/* ================================================================= */ // namespace
-                                                                        // DT4D
+/* ================================================================= */
 } // namespace DT4D
 } // namespace pros
