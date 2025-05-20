@@ -15,7 +15,6 @@ enum BrakingType { COAST = 0, BRAKE = 1, HOLD = 2, DEFAULT = 3 };
 enum MoveType { PID, Relative, Basic };
 
 namespace pros {
-inline namespace v5 {
 namespace DT4D {
 
 /**
@@ -209,21 +208,21 @@ public:
         _gearRatio(GearRatio), _kP(kP), _kI(kI), _kD(kD), D_kP(DkP), D_kI(DkI),
         D_kD(DkD) {}
 
-  int get_Wheelbase() const { return _wheelbase; }
-  int get_WheelDiameter() const { return _wheelDiameter; }
-  float get_GearRatio() const { return _gearRatio; }
+  int get_Wheelbase() const;
+  int get_WheelDiameter() const;
+  float get_GearRatio() const;
 
-  void set_Wheelbase(int Wheelbase) { _wheelbase = Wheelbase; }
-  void set_WheelDiameter(int WheelDiameter) { _wheelDiameter = WheelDiameter; }
-  void set_gearRatio(int gearRatio) { _gearRatio = gearRatio; }
+  void set_Wheelbase(int Wheelbase);
+  void set_WheelDiameter(int WheelDiameter);
+  void set_gearRatio(int gearRatio);
 
-  double get_kP() const { return _kP; }
-  double get_kI() const { return _kI; }
-  double get_kD() const { return _kD; }
+  double get_kP() const;
+  double get_kI() const;
+  double get_kD() const;
 
-  double get_DkP() const { return D_kP; }
-  double get_DkI() const { return D_kI; }
-  double get_DkD() const { return D_kD; }
+  double get_DkP() const;
+  double get_DkI() const;
+  double get_DkD() const;
 
   double _kP;
   double _kI;
@@ -360,7 +359,6 @@ public:
   void stop(BrakingType type = DEFAULT);
 };
 } // namespace DT4D
-} // namespace v5
 } // namespace pros
 
 #endif // PROS_DRIVETRAINS4DUMMIES_HPP

@@ -1,7 +1,6 @@
 #include "pros/drivetrains4dummies.hpp"
 
 namespace pros {
-inline namespace v5 {
 namespace DT4D {
 
 float applySlew(int current, int target, float rate) {
@@ -536,5 +535,4 @@ void Drivetrain4DummiesNT::stop(BrakingType type) {
 /* ================================================================= */ // namespace
                                                                         // DT4D
 } // namespace DT4D
-} // namespace v5
 } // namespace pros
