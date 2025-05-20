@@ -1,10 +1,10 @@
 #include "pros/drivetrains4dummies.hpp"
 
-using namespace pros;
-using namespace std;
-using namespace DT4D;
+namespace pros {
+inline namespace v5 {
+namespace DT4D {
 
-float applySlew(int current, int target, float rate = 5) {
+float applySlew(int current, int target, float rate) {
   int diff = target - current;
   if (abs(diff) > rate)
     return current + rate * (diff > 0 ? 1 : -1);
@@ -533,4 +533,8 @@ void Drivetrain4DummiesNT::stop(BrakingType type) {
   _leftMotors.brake();
   _leftMotors.brake();
 }
-/* ================================================================= */
+/* ================================================================= */ // namespace
+                                                                        // DT4D
+} // namespace DT4D
+} // namespace v5
+} // namespace pros

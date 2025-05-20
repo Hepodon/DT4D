@@ -10,9 +10,9 @@ using namespace DT4D;
 
 DT4D::PIDsettings pids(100, 5, 15, 100);
 
-MotorGroup aright({5, 10}, v5::MotorGears::green,
+MotorGroup aright({1, 2, 3}, v5::MotorGears::blue,
                   v5::MotorEncoderUnits::degrees);
-MotorGroup aleft({-1, -6}, v5::MotorGears::green,
+MotorGroup aleft({-20, -19, -7}, v5::MotorGears::green,
                  v5::MotorEncoderUnits::degrees);
 
 Imu inertial(12);
@@ -44,32 +44,36 @@ void autonomous() {
 }
 
 void opcontrol() {
-  int power;
-  int turn;
+
+  float driveValue = 0;
+  float turnValue = 0;
+
   int leftPower = 0;
   int rightPower = 0;
+
+  const float driveSlewRate = 8;
+  const float turnSlewRate = 20;
+
   while (true) {
-    power = userinput.get_analog(pros::E_CONTROLLER_ANALOG_LEFT_Y);
-    turn = userinput.get_analog(pros::E_CONTROLLER_ANALOG_RIGHT_X);
-    if (power != 0) {
-      leftPower =
-          DT4D::applySlew(leftPower, power + turn, 10 + (10.0 * power / 100));
-      rightPower =
-          DT4D::applySlew(rightPower, power - turn, 10 + (10.0 * power / 100));
-    } else {
-      leftPower = DT4D::applySlew(leftPower, power + turn, 25);
-      rightPower = DT4D::applySlew(rightPower, power - turn, 25);
-    }
+    float rawDrive = userinput.get_analog(E_CONTROLLER_ANALOG_LEFT_Y);
+    float rawTurn = userinput.get_analog(E_CONTROLLER_ANALOG_RIGHT_X);
+
+    driveValue = applySlew(driveValue, rawDrive, driveSlewRate);
+    turnValue = applySlew(turnValue, rawTurn, turnSlewRate);
+
+    leftPower = driveValue + turnValue;
+    rightPower = driveValue - turnValue;
+
     aleft.move(leftPower);
     aright.move(rightPower);
 
-    while (userinput.get_digital(pros::E_CONTROLLER_DIGITAL_R1)) {
-      leftPower = 0;
-      rightPower = 0;
+    if (userinput.get_digital(E_CONTROLLER_DIGITAL_R1)) {
       aleft.brake();
       aright.brake();
+      driveValue = 0;
+      turnValue = 0;
     }
 
-    pros::delay(150);
+    delay(20);
   }
 }

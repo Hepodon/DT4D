@@ -51,8 +51,9 @@ public:
    * @param minSpeed    double Minimum motor speed.
    * @param maxSpeed    double Maximum motor speed.
    */
-  PIDsettings(int checkTime, int threshold, int minSpeed,
-              int maxSpeed);
+  PIDsettings(int checkTime, int threshold, int minSpeed, int maxSpeed)
+      : _checkTime(checkTime), _threshold(threshold), _minSpeed(minSpeed),
+        _maxSpeed(maxSpeed) {}
 
   /// Returns int checkTime as a constant
   int get_checkTime() const;
